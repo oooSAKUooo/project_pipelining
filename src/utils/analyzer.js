@@ -1,28 +1,36 @@
 // utils/analyzer.js
-
 export function analyzePipeline(instructions, useForwarding = true) {
   const timeline = [];
   const registerWriteCycle = {};
-  let cycle = 1; // เริ่มนับ cycle ตั้งแต่ 1
+  let cycle = 1;
+  let cacheHits = 0;
+  let cacheMisses = 0;
 
   for (let i = 0; i < instructions.length; i++) {
     const instr = instructions[i];
     const [rd, rs1, rs2] = instr.operands;
     let stall = 0;
 
+    // Simulate cache behavior (simple model)
+    const isCacheHit = Math.random() > 0.2; // 80% hit rate for simulation
+    if (isCacheHit) {
+      cacheHits++;
+    } else {
+      cacheMisses++;
+      stall += 1; // Add 1 cycle stall for cache miss
+    }
+
     if (useForwarding) {
-      // ตรวจสอบ hazard สำหรับ load-use hazard
       if (i > 0) {
         const prevInstr = instructions[i - 1];
         if (prevInstr.opcode === "lw") {
           const prevRd = prevInstr.operands[0];
           if ((rs1 && rs1 === prevRd) || (rs2 && rs2 === prevRd)) {
-            stall = 1; // เพิ่ม stall 1 รอบ
+            stall += 1;
           }
         }
       }
     } else {
-      // แบบไม่มี forwarding ต้องรอให้ผลลัพธ์เขียนกลับก่อน
       if (rs1 && registerWriteCycle[rs1] && registerWriteCycle[rs1] >= cycle + 1) {
         stall = Math.max(stall, registerWriteCycle[rs1] - cycle);
       }
@@ -31,7 +39,6 @@ export function analyzePipeline(instructions, useForwarding = true) {
       }
     }
 
-    // กำหนดจังหวะของ pipeline โดย IF stage เริ่มที่ cycle หลัง stall
     const start = cycle + stall;
     const stagesMap = {
       IF: start,
@@ -46,14 +53,26 @@ export function analyzePipeline(instructions, useForwarding = true) {
       stages: stagesMap,
       stall,
       startCycle: start,
+      cacheHit: isCacheHit,
     });
 
     if (rd) {
       registerWriteCycle[rd] = stagesMap.WB;
     }
-    // รอบต่อไปจะเริ่ม IF หลังจากรอบปัจจุบัน
     cycle = start + 1;
   }
 
-  return timeline;
+  const totalAccesses = cacheHits + cacheMisses;
+  const hitRate = totalAccesses > 0 ? (cacheHits / totalAccesses) * 100 : 0;
+  const missRate = totalAccesses > 0 ? (cacheMisses / totalAccesses) * 100 : 0;
+
+  return {
+    timeline,
+    cacheStats: {
+      hits: cacheHits,
+      misses: cacheMisses,
+      hitRate: parseFloat(hitRate.toFixed(2)),
+      missRate: parseFloat(missRate.toFixed(2)),
+    }
+  };
 }

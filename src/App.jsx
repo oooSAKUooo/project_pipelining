@@ -5,6 +5,7 @@ import PipelineTimeline from "./components/PipelineTimeline";
 import CPIChart from "./components/CPIChart";
 import { parseInstructions } from "./utils/parser";
 import { analyzePipeline } from "./utils/analyzer";
+import HitMissChart from "./components/HitMissChart";
 
 function App() {
   const [instructions, setInstructions] = useState([]);
@@ -34,6 +35,7 @@ function App() {
     setCpiData([
       { mode: "No Forwarding", cpi: parseFloat(cpiNoFwd.toFixed(2)) },
       { mode: "With Forwarding", cpi: parseFloat(cpiFwd.toFixed(2)) },
+
     ]);
   };
 
@@ -57,7 +59,7 @@ function App() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-2xl max-w-lg w-full z-50">
               <h2 className="text-2xl font-semibold text-indigo-700 mb-4">
-                 Pipelining Stages Explanation
+                Pipelining Stages Explanation
               </h2>
               <p><strong>IF (Instruction Fetch):</strong> ดึงคำสั่งจาก memory</p>
               <p><strong>ID (Instruction Decode):</strong> แปลคำสั่งและเตรียม operands</p>
@@ -85,16 +87,19 @@ function App() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h3 className="text-center font-semibold text-indigo-600 mb-2"> No Forwarding</h3>
-                <PipelineTimeline timeline={timelineNoForward} />
+                <h3 className="text-center font-semibold text-indigo-600 mb-2">No Forwarding</h3>
+                <PipelineTimeline timeline={timelineNoForward.timeline} />
               </div>
               <div>
-                <h3 className="text-center font-semibold text-indigo-600 mb-2"> With Forwarding</h3>
-                <PipelineTimeline timeline={timelineWithForward} />
+                <h3 className="text-center font-semibold text-indigo-600 mb-2">With Forwarding</h3>
+                <PipelineTimeline timeline={timelineWithForward.timeline} />
               </div>
             </div>
 
-            <CPIChart data={cpiData} />
+            <div className="grid grid-cols-1 gap-6">
+              <CPIChart data={cpiData} />
+              <HitMissChart data={hitMissData} />
+            </div>
           </>
         )}
       </div>
