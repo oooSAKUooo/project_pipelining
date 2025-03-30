@@ -11,7 +11,7 @@ function App() {
   const [timelineNoForward, setTimelineNoForward] = useState([]);
   const [timelineWithForward, setTimelineWithForward] = useState([]);
   const [cpiData, setCpiData] = useState([]);
-  const [showModal, setShowModal] = useState(false); // State สำหรับการแสดง Modal
+  const [showModal, setShowModal] = useState(false);
 
   const handleFileParsed = (lines) => {
     const parsed = parseInstructions(lines);
@@ -25,13 +25,15 @@ function App() {
     const cpiNoFwd = totalCyclesNoFwd / parsed.length;
     const cpiFwd = totalCyclesFwd / parsed.length;
 
+    // สำหรับ non-pipelined แต่ละคำสั่งใช้ 5 รอบ ดังนั้น ideal CPI = 5
+    const idealCPI = 5;
+
     setInstructions(parsed);
     setTimelineNoForward(timelineNoFwd);
     setTimelineWithForward(timelineFwd);
     setCpiData([
       { mode: "No Forwarding", cpi: parseFloat(cpiNoFwd.toFixed(2)) },
       { mode: "With Forwarding", cpi: parseFloat(cpiFwd.toFixed(2)) },
-      { mode: "Ideal (No Pipeline)", cpi: parsed.length }
     ]);
   };
 
